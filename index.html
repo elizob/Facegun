@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title></title>
+	<style type="text/css">
+		
+		body {
+    		padding: 0;
+    		margin: 0;
+		}
+
+		#rest {		
+			background-color: rgb(87, 231, 87);
+			border: none;
+			width: 150px;
+			height: 75px;
+			font-size: 30px;
+			color: white;
+			border-radius: 10px;
+
+		}
+		/* video {
+			display: block;
+		} */
+		
+		canvas {
+			display: block;
+			position: absolute;
+			top: 0;
+		}
+	 	
+			
+	</style>
+</head>
+<body>
+	<video autoplay="true"></video>
+		<!-- <pre></pre> -->
+
+	
+
+	<script src="https://cdn.jsdelivr.net/npm/p5@1.4.1/lib/p5.js"></script>
+	<script src="./lib/face-api/face-api.min.js"></script>
+
+	<script>
+
+		init()
+
+		async function init() {
+
+			// Variabili per le coordinate del centro del volto (0.0..1.0)
+			let centerX, centerY
+			// Variabili “smussate” (0.0..1.0)
+			let smoothCenterX, smoothCenterY
+			// Boolean: il volto è stato individuato (true / false)
+
+			let isFace = false
+			// const canvas = document.querySelector('canvas')
+			// const ctx = canvas.getContext('2d')
+
+			// -- 1. carica i modelli --------------------------------------
+
+			const MODELS_URI = './lib/face-api/weights'
+			await faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_URI)
+			console.log('Tutti i modelli sono stati caricati.')
+
+			// -- 2. inizializza la webcam ---------------------------------
+
+			const webcam = document.querySelector('video');
+
+			webcam.addEventListener('play', function() {
+				console.log('Webcam inizializzata e avviata.')
+				webcam.width = webcam.videoWidth / 2
+				webcam.height = webcam.videoHeight / 2
+				avviaFaceDetect(webcam)
+				setup2()
+
+			})
+
+			// -- 3. avvia l’app -------------------------------------------
+
+			if (navigator.mediaDevices.getUserMedia) {
+				return navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+					webcam.srcObject = stream
+				}).catch(function(error) {
+					console.warn('C’è stato un problema con la webcam!')
+					console.log(error)
+				})
+			}
+
+			// -- 4. app principale ----------------------------------------
+
+			function setup2() {
+
+				requestAnimationFrame(loop)
+
+				// canvas.width = webcam.width * 3
+				// canvas.height = webcam.height * 3
+				centerX = 0.5
+				centerY = 0.5
+				smoothCenterX = centerX
+				smoothCenterY = centerY
+
+			}
+
+			function loop() {
+
+				requestAnimationFrame(loop)
+
+				// const width = canvas.width
+				// const height = canvas.height
+
+				smoothCenterX += (centerX - smoothCenterX) * 0.1
+				smoothCenterY += (centerY - smoothCenterY) * 0.1
+
+				// ctx.fillStyle = 'rgb(220,220,220)'
+				// ctx.fillRect(0, 0, width, height)
+
+				// -- Visualizza i dati "raw" ------------------------------
+
+				// ctx.strokeStyle = 'rgb(190,190,190)'
+				// ctx.beginPath()
+				// ctx.moveTo(centerX * width, 0)
+				// ctx.lineTo(centerX * width, height)
+				// ctx.moveTo(0, centerY * height)
+				// ctx.lineTo(width, centerY * height)
+				// ctx.stroke()
+
+				// -- Visualizza i dati "smooth" ---------------------------
+
+				// ctx.strokeStyle = 'red'
+				// ctx.beginPath()
+				// ctx.moveTo(smoothCenterX * width, 0)
+				// ctx.lineTo(smoothCenterX * width, height)
+				// ctx.moveTo(0, smoothCenterY * height)
+				// ctx.lineTo(width, smoothCenterY * height)
+				// ctx.stroke()
+
+				// -- Stampa info ------------------------------------------
+
+				// let out = ''
+				// out += "isFace        : " + isFace + "<br>"
+				// out += "centerX       : " + centerX.toFixed(2) + " [percentuale]<br>"
+				// out += "centerY       : " + centerY.toFixed(2) + " [percentuale]<br>"
+				// out += "smoothCenterX : " + smoothCenterX.toFixed(2) + " [percentuale]<br>"
+				// out += "smoothCenterY : " + smoothCenterY.toFixed(2) + " [percentuale]<br>"
+
+				// document.querySelector('pre').innerHTML = out
+			}
+
+			function avviaFaceDetect(videoSrc) {
+				console.log('FaceDetect avviato.')
+
+				setInterval(async function() {
+					const detections = await faceapi.detectSingleFace(videoSrc, new faceapi.TinyFaceDetectorOptions())
+					if (detections) {
+						const box = detections.box
+						// centerX e centerY sono normalizzati!
+						centerX = (box._x + box._width/2) * (windowWidth)  / videoSrc.videoWidth
+						centerY = (box._y + box._height/2) * (windowHeight) / videoSrc.videoHeight
+						isFace = true
+
+						console.log(centerX,centerY)
+
+						cursore.x += (centerX - cursore.x)  * 0.1
+						cursore.y += (centerY - cursore.y) * 0.1
+
+						drawCursor(cursore);
+
+					} else {
+						isFace = false
+					}
+				}, 60)
+			}
+		}
+
+
+		let score = 0;
+		let record = 0;
+		const TempoConcesso = 30 * 1000;
+		let start = -1e10;
+		let restartbtn = 0;
+		let button;
+	
+
+		const target = {
+			x : 0,
+			y : 0,
+			raggio : 20
+		}
+
+		const badTarget = {
+			x : 0,
+			y : 0,
+			raggio : 60
+		}
+
+		const goodTarget = {
+			x : 0,
+			y : 0,
+			raggio : 20
+		}
+
+		const cursore = { 
+			x : 0, 
+			y : 0, 
+		}
+
+		// let targetR = 20;
+		// let targetX = 0;
+		// let targety = 0;
+		
+
+		// let raggio = 30;
+		// let tx = 0;
+		// let ty = 0;
+
+
+		function randomizzaPosizioneDisco(disco) {
+			disco.x = random(disco.raggio*15, (width) - disco.raggio*15);
+			disco.y = random(disco.raggio*15, (height) - disco.raggio*15);
+		}
+
+		function hitDisco(disco, cur) {
+			const d = dist(cur.x, cur.y, disco.x, disco.y)
+			if (d < disco.raggio) return true
+			return false
+		}
+
+
+		function setup(){
+			const ctx = createCanvas(windowWidth, windowHeight)
+			start_game()
+		}
+
+
+		function start_game(){
+
+			randomizzaPosizioneDisco(goodTarget)
+			randomizzaPosizioneDisco(badTarget)
+			randomizzaPosizioneDisco(target)
+
+			button = createButton("RESTART")
+			button.id("rest")
+			
+		}
+
+		function windowResized() {
+ 		 	resizeCanvas(windowWidth, windowHeight);
+		
+		}
+
+		function draw(){
+			
+			const t = millis() - start
+
+			if (t <= TempoConcesso) {
+				game();  
+				showTime (t)
+			} else {
+				endGame();
+			}
+		}
+		
+		function drawCursor(cur) {
+			noFill();
+			stroke(0);
+			circle(cur.x, cur.y, 35, 35);
+			line(cur.x, cur.y - 20, cur.x, cur.y + 20);
+			line(cur.x - 20, cur.y, cur.x + 20, cur.y);
+			
+		}
+
+		function drawCursorW(cur) {
+			noFill();
+			stroke(255);
+			circle(cur.x, cur.y, 35, 35);
+			line(cur.x, cur.y - 20, cur.x, cur.y + 20);
+			line(cur.x - 20, cur.y, cur.x + 20, cur.y);
+			
+		}
+	
+		function drawTarget(disco) { 
+  			noStroke();
+
+			fill(200, 0, 0);
+ 			circle(disco.x, disco.y, disco.raggio * 4);
+			fill(255)
+			circle(disco.x, disco.y, disco.raggio * 3);
+  			fill(200, 0, 0);
+ 			circle(disco.x, disco.y, disco.raggio * 2);
+  			fill(255);
+  			circle(disco.x, disco.y, disco.raggio);
+		}	
+
+		function drawBadTarget(disco) { 
+  			noStroke();
+			fill(0, 0, 0);
+ 			circle(disco.x, disco.y, disco.raggio * 2);
+			
+		}
+
+		function drawGoodTarget(disco) { 
+  			noStroke();
+			fill(240, 225, 49);
+ 			circle(disco.x, disco.y, disco.raggio * 2);
+			
+		}
+
+		function showTime(time) {
+			fill(0);
+			textSize(100);
+			text(Math.ceil((TempoConcesso - time) / 1000), width/2 - 30, height/2);
+			
+		}
+
+		
+		function game(){
+
+			rest = document.querySelector("#rest")
+			rest.style.display = "none"
+			background(22, 130, 200); 
+
+			// target corretto
+			if (hitDisco(target, cursore)) {
+				background (22, 130, 200) 
+				score += 1;
+				randomizzaPosizioneDisco(target)
+				randomizzaPosizioneDisco(badTarget)
+				randomizzaPosizioneDisco(goodTarget)
+
+			}else{
+				background(244, 248, 252)
+			}
+			
+			// target sbagliato
+			if (hitDisco(badTarget, cursore)) {
+				start -= 2 * 1000;
+				randomizzaPosizioneDisco(badTarget)
+			}
+
+			// target buono
+			if (hitDisco(goodTarget, cursore)) {
+				start += 5 * 1000;
+				randomizzaPosizioneDisco(goodTarget)
+			}
+			
+			drawTarget(target);
+			drawBadTarget(badTarget);
+			drawCursor(cursore);
+			drawGoodTarget(goodTarget);
+			
+			textSize(30);
+			text(`Score: ${score}\n`, 20, 40);
+			
+			
+		}
+		
+		function restart() {
+
+			let tr =  millis() - restartbtn
+
+			if (tr) {
+				start = millis();
+				score = 0;
+			}
+			console.log(tr)
+			
+		}
+		
+		
+		function endGame() {
+			background(75);
+			fill(255);
+
+			
+
+			button.mouseOver(restart)
+			button.position (width/2, height/2 + 60)
+
+			if (score >= record){
+				record = score
+			}else if (score <= record){
+				record = record
+			}
+			
+			text(`Score: ${score}\n`, width/2, height/2);
+			text(`Record: ${record}\n`, width/2, height/2 + 30);
+			textSize(30);
+
+			drawCursorW(cursore);
+			
+
+			rest.style.display = "block"
+		}
+
+		
+
+		
+		</script>
+
+
+</body>
+</html>
