@@ -31,6 +31,33 @@
 			position: absolute;
 			top: 0;
 		}
+		.menu {
+			margin-left: 10px;
+			margin-right:10px;
+			font-size: calc(12px + 6 * ((100vw - 320px) / 680));
+			width: 100%;
+			height: 5vh;
+			color: white;
+			position: fixed;
+			top: 95vh;
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+			z-index: 10;
+		}
+
+		.index {
+			order: 1;
+			margin-left: 1vw;
+		}
+
+		.index a {
+			text-decoration: none;
+			color: white;
+			font-weight: 200;
+		}
+
 	</style>
 </head>
 
@@ -42,6 +69,13 @@
 
 	<script src="https://cdn.jsdelivr.net/npm/p5@1.4.1/lib/p5.js"></script>
 	<script src="./lib/face-api/face-api.min.js"></script>
+
+	<div class="menu">
+		<div class="index">
+			<a href="https://ixd-supsi.github.io/inter-faccia/">Index</a>
+		</div>
+	
+	
 
 	<script>
 
@@ -372,6 +406,8 @@
 			console.log(tr)
 
 		}
+		
+		
 
 
 		function endGame() {
@@ -419,8 +455,8 @@
 			if (cursore.x >= width / 2.6 && cursore.x <= (width / 2.6) + 300 && cursore.y >= (height / 2) + 100  && cursore.y <= (height / 2) + 200) {
 				return restart()
 			}
-
-			// rest.style.display = "block"
+			
+	
 		}
 
 		init()
